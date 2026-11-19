@@ -28,7 +28,7 @@ Modrinth App 的实例目录里找；找到多个会列成编号让你选，也�
 推荐直接跑源码，不用装：
 
 ```bash
-git clone https://github.com/<你的名字>/mc-save-doctor
+git clone https://github.com/208347872-rgb/mc-save-doctor
 cd mc-save-doctor
 python run.py find "C:/Users/你/AppData/Roaming/.minecraft/saves/我的世界"
 ```

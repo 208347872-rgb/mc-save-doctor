@@ -23,7 +23,8 @@ dependencies = []
 mcsavedoctor = "mcsavedoctor.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/"
+Homepage = "https://github.com/208347872-rgb/mc-save-doctor"
+Issues = "https://github.com/208347872-rgb/mc-save-doctor/issues"
 
 [tool.setuptools]
 package-dir = { "" = "src" }
