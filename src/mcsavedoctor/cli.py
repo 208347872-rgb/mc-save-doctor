@@ -210,7 +210,7 @@ def cmd_map(args):
 # ------------------------------------------------------------------ report
 def cmd_report(args):
     w = _open(args.world)
-    scanned, errors = _scan_all(w, [args.dim] if args.dim else None, quiet=True)
+    scanned, errors = _scan_all(w, [args.dim] if args.dim else None, quiet=False)
     players = w.players()
     issues, stats = repair.diagnose(w)
     stats["players"] = len(players)

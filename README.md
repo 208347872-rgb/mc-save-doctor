@@ -29,6 +29,8 @@ cd mc-save-doctor
 python run.py find "C:/Users/你/AppData/Roaming/.minecraft/saves/我的世界"
 ```
 
+Windows 上懒人用法：把存档文件夹**拖到 `双击出报告.bat` 上**，直接出 `存档体检报告.html`。
+
 或者装成命令：
 
 ```bash
