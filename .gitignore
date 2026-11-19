@@ -11,3 +11,5 @@ venv/
 *.png
 !docs/*.png
 mc-save-doctor-backup-*/
+dist/
+*.spec

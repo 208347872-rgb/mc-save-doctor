@@ -49,7 +49,7 @@ def _resolve_world(arg):
             raise SystemExit(2)
         return p                                  # 交给 World 去报「路径不存在」
 
-    cands = locate.find_worlds(compute_size=False)
+    cands = locate.find_worlds(compute_size=True)
     if not cands:
         print("没自动找到存档。直接把存档文件夹路径跟上来：mcsavedoctor info \"<路径>\"",
               file=sys.stderr)

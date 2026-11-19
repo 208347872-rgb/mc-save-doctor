@@ -23,6 +23,18 @@ Modrinth App 的实例目录里找；找到多个会列成编号让你选，也�
 
 ---
 
+## 最快：Windows 单文件 exe（不用装 Python）
+
+[下载 `mc-save-doctor.exe`](https://github.com/208347872-rgb/mc-save-doctor/releases/download/v0.1.0/mc-save-doctor.exe)（9.9 MB）
+
+双击 → 它自己找存档 → 出报告 → 浏览器打开。全程不问路径、不装任何东西。
+
+第一次运行 Windows 可能弹 SmartScreen 蓝框（没买代码签名证书，不是有病毒），
+点「更多信息 → 仍要运行」即可。想核对文件的话，发布的 sha256 是
+`a9053f136e9cf63695c3c071899db20e642759fa215318a08dc369135e0930cf`。
+
+---
+
 ## 安装
 
 推荐直接跑源码，不用装：
@@ -128,6 +140,21 @@ python -m unittest discover -s tests -v
 
 20 个用例，全部用**真格式**的假存档跑：自己写 NBT、自己拼 region 扇区、故意砸坏
 level.dat 和 chunk，验证修复后的世界里剩下的 chunk 还能读。
+
+## 自己打包 exe
+
+```bat
+打包exe.bat
+```
+
+或者手动：
+
+```bash
+pip install pyinstaller
+python -m PyInstaller --onefile --console --name mc-save-doctor --paths src packaging/exe_entry.py
+```
+
+产物在 `dist/mc-save-doctor.exe`，单文件约 10 MB，Windows 上不需要 Python。
 
 ## 关于
 
