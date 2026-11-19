@@ -133,11 +133,12 @@ def region_file_for(region_dir, cx, cz):
 
 
 def make_modern_world(root, chunks=None, uuid="11111111-2222-3333-4444-555555555555",
-                      player_pos=(1247.5, 65.0, 1269.5), death=None, bed=None):
+                      player_pos=(1247.5, 65.0, 1269.5), death=None, bed=None,
+                      name="测试世界"):
     """1.18+ 布局：dimensions/minecraft/overworld/region + players/data/"""
     os.makedirs(os.path.join(root, "dimensions", "minecraft", "overworld", "region"), exist_ok=True)
     os.makedirs(os.path.join(root, "players", "data"), exist_ok=True)
-    make_level(os.path.join(root, "level.dat"))
+    make_level(os.path.join(root, "level.dat"), name=name)
     make_player(os.path.join(root, "players", "data", uuid + ".dat"),
                 pos=player_pos, death=death, bed=bed)
     chunks = chunks or [

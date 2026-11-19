@@ -11,13 +11,15 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 import unittest
+from unittest import mock
 
 from helpers import (make_legacy_world, make_modern_world, make_player,
                      region_file_for, write_region, write_region_dir,
                      chunk_payload)  # noqa: E402  (helpers 自己会加 src 到 sys.path)
 
-from mcsavedoctor import nbt, region, render, repair, report, survey  # noqa: E402
+from mcsavedoctor import nbt, region, render, repair, report, survey, locate  # noqa: E402
 from mcsavedoctor.cli import main  # noqa: E402
 from mcsavedoctor.world import World  # noqa: E402
 
@@ -301,6 +303,71 @@ class TestRepair(Base):
         issues, stats = repair.diagnose(World(root))
         self.assertEqual([i for i in issues if i.severity == "error"], [])
         self.assertEqual(stats["chunk_errors"], 0)
+
+
+class TestLocate(Base):
+    """小白不用知道路径：自动翻出各启动器/版本隔离里的世界。"""
+
+    def _fake_env(self, two=True):
+        home, appdata = self.path("home"), self.path("appdata")
+        make_modern_world(os.path.join(appdata, ".minecraft", "versions", "26.3",
+                                      "saves", "世界A"), name="世界A")
+        if two:
+            b = make_modern_world(os.path.join(home, ".minecraft", "saves", "世界B"), name="世界B")
+            old = time.time() - 100_000
+            os.utime(os.path.join(b, "level.dat"), (old, old))
+        return mock.patch.dict(os.environ, {
+            "APPDATA": appdata, "HOME": home, "USERPROFILE": home,
+            "LOCALAPPDATA": self.path("local"),
+        })
+
+    def test_finds_both_layouts(self):
+        with self._fake_env():
+            cands = locate.find_worlds()
+        self.assertEqual([c.name for c in cands], ["世界A", "世界B"])   # 按最后游玩倒序
+        self.assertEqual(cands[0].size > 0, True)
+        self.assertTrue(cands[0].path.endswith("世界A"))
+
+    def test_duplicates_not_listed_twice(self):
+        home, appdata = self.path("home"), self.path("appdata")
+        # 同一个目录被两条规则撞上（home 和 USERPROFILE 相同等）
+        make_modern_world(os.path.join(home, ".minecraft", "saves", "世界C"), name="世界C")
+        with mock.patch.dict(os.environ, {"APPDATA": appdata, "HOME": home,
+                                          "USERPROFILE": home, "LOCALAPPDATA": self.path("local")}):
+            cands = locate.find_worlds()
+        self.assertEqual(len([c for c in cands if c.name == "世界C"]), 1)
+
+    def test_cli_list(self):
+        with self._fake_env():
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                self.assertEqual(main(["list"]), 0)
+            out = buf.getvalue()
+            self.assertIn("找到 2 个世界", out)
+            self.assertIn("世界A", out)
+            self.assertIn("世界B", out)
+
+    def test_cli_world_optional(self):
+        with self._fake_env(two=False):
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main(["info"]), 0)          # 不给路径也能跑
+            self.assertIn("世界A", buf.getvalue())
+
+    def test_cli_pick_by_number(self):
+        with self._fake_env():
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(main(["info", "2"]), 0)     # 2 = 世界B
+            self.assertIn("世界B", buf.getvalue())
+
+    def test_cli_many_without_choice_exits(self):
+        with self._fake_env():
+            with contextlib.redirect_stdout(io.StringIO()), \
+                 contextlib.redirect_stderr(io.StringIO()), \
+                 mock.patch.object(sys, "stdin", io.StringIO("")):
+                with self.assertRaises(SystemExit):
+                    main(["info"])
 
 
 class TestCli(Base):

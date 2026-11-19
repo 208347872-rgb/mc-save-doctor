@@ -10,12 +10,16 @@
 `level.dat`、`players/data/*.dat` 和 `region/*.mca`。
 
 ```
-mcsavedoctor info    存档目录     世界概况：版本、出生点、玩家、作弊开关
-mcsavedoctor find    存档目录     待得最久的地方（= 家），直接给 /tp
-mcsavedoctor map     存档目录     出一张俯视图 PNG，标出你和上次死亡点
-mcsavedoctor report  存档目录     全部塞进一份 HTML，能存能发
-mcsavedoctor repair  存档目录     体检坏档；加 --apply 才动手修，动手前先备份
+mcsavedoctor list                 自动翻出这台机器上所有的存档（不用知道路径）
+mcsavedoctor info    [世界]       世界概况：版本、出生点、玩家、作弊开关
+mcsavedoctor find    [世界]       待得最久的地方（= 家），直接给 /tp
+mcsavedoctor map     [世界]       出一张俯视图 PNG，标出你和上次死亡点
+mcsavedoctor report  [世界]       全部塞进一份 HTML，能存能发
+mcsavedoctor repair  [世界]       体检坏档；加 --apply 才动手修，动手前先备份
 ```
+
+**存档路径可以省略**：不给就自己去 `%APPDATA%\.minecraft`、版本隔离目录、Prism/MultiMC/HMCL/
+Modrinth App 的实例目录里找；找到多个会列成编号让你选，也可以直接 `mcsavedoctor info 2`。
 
 ---
 
@@ -29,7 +33,8 @@ cd mc-save-doctor
 python run.py find "C:/Users/你/AppData/Roaming/.minecraft/saves/我的世界"
 ```
 
-Windows 上懒人用法：把存档文件夹**拖到 `双击出报告.bat` 上**，直接出 `存档体检报告.html`。
+Windows 上懒人用法：**双击 `双击出报告.bat`**，它自己找存档、自己出报告；
+也可以把某个存档文件夹拖到它上面，只看那一份。
 
 或者装成命令：
 
@@ -110,6 +115,10 @@ $ mcsavedoctor repair "…/saves/我的世界" --apply    # 真修
 - 1.18+ 的 `dimensions/minecraft/<维度>/` 布局和旧版 `region/`、`DIM-1/`、`DIM1/` 布局
 - 1.12 及以前：找家（停留时间）可用，方块名字读不出来（那时代方块存的是全局数字 ID），
   会在报告里提示
+- 启动器：官方 / PCL 版本隔离 / Prism / MultiMC / HMCL / Modrinth App / 桌面或文档里自建的
+  `.minecraft` 都会自动找；实在找不到，设环境变量 `MCSD_SAVES=D:\某个\saves` 或者直接给路径
+- 网易版：**不支持**（存档是加密的，路径也不一样）。网易版玩家先用启动器里的「导出存档」
+  导出成 zip，解压后把解出来的世界文件夹给命令
 
 ## 测试
 

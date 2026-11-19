@@ -15,7 +15,7 @@ import sys
 import time
 
 from . import __version__
-from . import render, repair, report, survey
+from . import locate, render, repair, report, survey
 from .world import World, WorldError
 
 
@@ -33,7 +33,50 @@ def _tp(x, y, z):
     return f"/tp {int(x)} {int(y)} {int(z)}"
 
 
-def _open(path):
+def _resolve_world(arg):
+    """world 参数可以是路径、编号，也可以不给（自动找）。"""
+    if arg:
+        p = os.path.expanduser(str(arg))
+        if os.path.exists(p):
+            return p
+        if str(arg).isdigit():
+            cands = locate.find_worlds(compute_size=False)
+            i = int(arg)
+            if 1 <= i <= len(cands):
+                return cands[i - 1].path
+            print(f"没有第 {i} 个世界（一共找到 {len(cands)} 个），先跑 mcsavedoctor list",
+                  file=sys.stderr)
+            raise SystemExit(2)
+        return p                                  # 交给 World 去报「路径不存在」
+
+    cands = locate.find_worlds(compute_size=False)
+    if not cands:
+        print("没自动找到存档。直接把存档文件夹路径跟上来：mcsavedoctor info \"<路径>\"",
+              file=sys.stderr)
+        raise SystemExit(2)
+    if len(cands) == 1:
+        print(f"自动找到：{cands[0].name}  ({cands[0].path})", file=sys.stderr)
+        return cands[0].path
+
+    print("找到好几个世界：", file=sys.stderr)
+    print(locate.describe(cands), file=sys.stderr)
+    if sys.stdin.isatty():
+        try:
+            ans = input("用哪个？输入编号（直接回车 = 最新的那个）: ").strip()
+        except EOFError:
+            ans = ""
+        if not ans:
+            return cands[0].path
+        if ans.isdigit() and 1 <= int(ans) <= len(cands):
+            return cands[int(ans) - 1].path
+        print("没看懂这个编号，退出。", file=sys.stderr)
+        raise SystemExit(2)
+    print("用编号指定，例如：mcsavedoctor info 1", file=sys.stderr)
+    raise SystemExit(2)
+
+
+def _open(arg):
+    path = _resolve_world(arg)
     try:
         return World(path)
     except WorldError as exc:
@@ -86,6 +129,20 @@ def _player_dict(p):
         "last_death_dimension": p.last_death_dim,
         "items": p.items,
     }
+
+
+# ------------------------------------------------------------------ list
+def cmd_list(args):
+    cands = locate.find_worlds()
+    if not cands:
+        print("没找到存档。")
+        print("把存档文件夹路径直接给命令也行，例如：")
+        print('  mcsavedoctor info "D:/某个地方/我的世界"')
+        return 1
+    print(f"找到 {len(cands)} 个世界（按最后游玩时间排）：")
+    print(locate.describe(cands))
+    print("\n用法：命令后面跟编号就行，例如  mcsavedoctor info 1   /   mcsavedoctor find 1")
+    return 0
 
 
 # ------------------------------------------------------------------ info
@@ -297,8 +354,11 @@ def build_parser():
     p.add_argument("--version", action="version", version=f"mc-save-doctor {__version__}")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    def common(sp, world_help="世界目录（.minecraft/saves/xxx），也可以给 saves 目录"):
-        sp.add_argument("world", help=world_help)
+    def common(sp, world_help="世界目录；省略就自动找，也可以写编号（先跑 list 看编号）"):
+        sp.add_argument("world", nargs="?", help=world_help)
+
+    sp = sub.add_parser("list", help="列出自动找到的所有存档（小白用这个，不用知道路径）")
+    sp.set_defaults(func=cmd_list)
 
     sp = sub.add_parser("info", help="世界概况：版本、出生点、玩家、作弊开关")
     common(sp)
